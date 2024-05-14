@@ -4,14 +4,15 @@ from numpy import typing
 import matplotlib.pyplot as plt
 from scipy.signal import correlate, find_peaks, peak_prominences
 from SoapySDR import *
+from SoapySDR import setLogLevel, SOAPY_SDR_SSI
 import time
 import sys
 
-SYMBOL_TIME_S = 0.000072 # Default symbol time for OcuSync
+SYMBOL_TIME_S = 0.000072
 SAMPLE_RATE = 20e6
 CENTER_FREQ = 2450e6
 CORR_BLOCK_LEN_SAMPLES = 256
-SYMBOL_LEN_SAMPLES = 2 * int(SYMBOL_TIME_S * SAMPLE_RATE)
+SYMBOL_LEN_SAMPLES = int(SYMBOL_TIME_S * SAMPLE_RATE)
 SLIDING_WINDOW_SIZE = SYMBOL_LEN_SAMPLES * 36
 
 
@@ -26,9 +27,9 @@ def get_signal_on_current(corr_results, symbol_len_samples, tolerance=0.2):
     lower_bound = np.nanpercentile(corr_results, 99.9)
 
     peaks, _ = find_peaks(corr_results, height=lower_bound, distance=SYMBOL_LEN_SAMPLES * 0.8)
-    # plot_correlation_results(corr_results, peaks, lower_bound, name="correlation_results") # For debugging
+    plot_correlation_results(corr_results, peaks, lower_bound, name="correlation_results") # For debugging
     if len(peaks) < int(0.2 * len(corr_results) / symbol_len_samples):
-        return False
+        return False, np.array([])
 
     # Filter out peaks too far apart
     diffs = np.diff(peaks)
@@ -55,9 +56,8 @@ def get_correlation(complex_signal):
     """
 
     complex_signal -= np.mean(complex_signal)
-    symbol_len_samples = int(SAMPLE_RATE * 0.000072)  # 72 microseconds
     shift = 150  # Estimated prefix length
-    steps = range(0, len(complex_signal) - symbol_len_samples, CORR_BLOCK_LEN_SAMPLES // 2)
+    steps = range(0, len(complex_signal) - SYMBOL_LEN_SAMPLES, CORR_BLOCK_LEN_SAMPLES // 2)
 
     num_steps = len(steps)
     corr_len = CORR_BLOCK_LEN_SAMPLES
@@ -65,7 +65,7 @@ def get_correlation(complex_signal):
 
     for i, start in enumerate(steps):
         end1 = start + CORR_BLOCK_LEN_SAMPLES
-        start2 = start + symbol_len_samples - shift
+        start2 = start + SYMBOL_LEN_SAMPLES - shift
         end2 = start2 + CORR_BLOCK_LEN_SAMPLES if start2 + CORR_BLOCK_LEN_SAMPLES < len(complex_signal) else len(
             complex_signal)
         block_1 = complex_signal[start:end1]
@@ -329,5 +329,7 @@ if __name__ == "__main__":
     # scan_frequency_range(range_start=2480e6, range_end=2410e6, step_size=10e6, step_duration=1)
     # scan_frequency_range(range_start=5725e6, range_end=5875e6, step_size=10e6, step_duration=1)
 
-    read_from_file_blockwise("recordings/droneid_short.cs8")
+    # read_from_file_blockwise("recordings/droneid_short.cs8")
+    read_from_file_blockwise("recordings/drone_video_shutdown.cs8")
+
     # test_noisy_signal("recordings/drone_video_shutdown.cs8")
