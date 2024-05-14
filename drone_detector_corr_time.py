@@ -4,11 +4,10 @@ from numpy import typing
 import matplotlib.pyplot as plt
 from scipy.signal import correlate, find_peaks, peak_prominences
 from SoapySDR import *
-from SoapySDR import setLogLevel, SOAPY_SDR_SSI
 import time
 import sys
 
-SYMBOL_TIME_S = 0.000072
+SYMBOL_TIME_S = 0.000072 # Default symbol time for OcuSync
 SAMPLE_RATE = 20e6
 CENTER_FREQ = 2450e6
 CORR_BLOCK_LEN_SAMPLES = 256
@@ -37,13 +36,13 @@ def get_signal_on_current(corr_results, symbol_len_samples, tolerance=0.2):
     mean_peak_dist = np.mean(diffs)
     signal_state = (1 - tolerance) * symbol_len_samples < mean_peak_dist < (1 + tolerance) * symbol_len_samples
 
-    if signal_state:
-        print("Mean peak distance:", mean_peak_dist)
-        # Write corr results
-        with open("recordings/corr_data_interactive.txt", "w") as f:
-            for j in corr_results:
-                f.write(str(j) + "\n")
-        plot_correlation_results(corr_results, peaks, lower_bound, name="correlation_results")
+    # if signal_state:
+    #     print("Mean peak distance:", mean_peak_dist)
+    #     # Write corr results
+    #     with open("recordings/corr_data_interactive.txt", "w") as f:
+    #         for j in corr_results:
+    #             f.write(str(j) + "\n")
+    #     plot_correlation_results(corr_results, peaks, lower_bound, name="correlation_results")
 
     return signal_state, diffs
 
