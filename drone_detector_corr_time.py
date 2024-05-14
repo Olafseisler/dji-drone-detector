@@ -7,6 +7,7 @@ from SoapySDR import *
 from SoapySDR import setLogLevel, SOAPY_SDR_SSI
 import time
 import sys
+import cProfile
 
 SYMBOL_TIME_S = 0.000072
 SAMPLE_RATE = 20e6
@@ -173,7 +174,7 @@ def stream_from_sdr(center_freq, sample_rate, duration):
             continue
 
         corr = get_correlation(buffer)
-        current_signal_on = get_signal_on_current(corr, SYMBOL_LEN_SAMPLES)
+        current_signal_on = get_signal_on_current(corr, 2 * SYMBOL_LEN_SAMPLES)
 
         if current_signal_on:
             num_times_on = min(num_times_on + 1, num_times_threshold)
@@ -264,7 +265,7 @@ def read_from_file_blockwise(file_path):
 
         corr_results = get_correlation(block)
 
-        current_signal_on, symbol_widths = get_signal_on_current(corr_results, SYMBOL_LEN_SAMPLES)
+        current_signal_on, symbol_widths = get_signal_on_current(corr_results, 2 *  SYMBOL_LEN_SAMPLES)
         # all_peak_distances.extend(symbol_widths)
 
         num_times_on = num_times_on + 1 if current_signal_on else max(0, num_times_on - 1)
