@@ -1,0 +1,6 @@
+# Ignore all build directories
+*build*/
+# Ignore recording files
+/recordings/
+# Ignore Jetbrains IDE files
+.idea/
